@@ -1,0 +1,77 @@
+import tkinter as tk
+import random
+
+class SortVisualizer(tk.Tk):
+    def __init__(self, data):
+        super().__init__()
+        self.title("Sorting Visualizer")
+        self.geometry("800x600")
+        self.canvas = tk.Canvas(self, width=800, height=600, bg='white')
+        self.canvas.pack()
+
+        self.data = data
+        self.bars = []
+        self.create_bars()
+        
+        self.sorting = False
+        self.sort_generator = None
+
+    def create_bars(self):
+        self.canvas.delete("all")
+        bar_width = 800 / len(self.data)
+        self.bars = [
+            self.canvas.create_rectangle(
+                i * bar_width, 600, (i + 1) * bar_width, 600 - self.data[i],
+                fill='lightblue', outline='black'
+            )
+            for i in range(len(self.data))
+        ]
+
+    def update_bars(self):
+        bar_width = 800 / len(self.data)
+        for i, height in enumerate(self.data):
+            self.canvas.coords(
+                self.bars[i],
+                i * bar_width, 600,
+                (i + 1) * bar_width, 600 - height
+            )
+        self.update()
+
+    def bubble_sort(self):
+        n = len(self.data)
+        for i in range(n):
+            for j in range(0, n-i-1):
+                if self.data[j] > self.data[j+1]:
+                    self.data[j], self.data[j+1] = self.data[j+1], self.data[j]
+                    self.update_bars()
+                    self.after(50)  # Adjust the speed of sorting
+                    self.update()
+                    yield
+
+    def start_sorting(self):
+        if not self.sorting:
+            self.sorting = True
+            self.sort_generator = self.bubble_sort()
+            self.animate()
+
+    def animate(self):
+        if self.sorting:
+            try:
+                next(self.sort_generator)
+                self.after(50, self.animate)  # Continue animation
+            except StopIteration:
+                self.sorting = False
+
+def main():
+    # Generate random data
+    data = [random.randint(10, 500) for _ in range(100)]
+    
+    app = SortVisualizer(data)
+    app.create_bars()
+    
+    # Start sorting when the window is ready
+    app.after(1000, app.start_sorting)
+    app.mainloop()
+
+if __name__ == "__main__":
+    main()
